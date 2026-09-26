@@ -6,7 +6,7 @@ public class BorrowingInfo
     
     public DateOnly BorrowedAt { get; private set; }
     
-    public DateOnly DueDate { get; private set; }
+    public DateOnly? DueDate { get; private set; }
     
     public DateOnly? ReturnedAt { get; private set; }
 
@@ -47,20 +47,21 @@ public class BorrowingInfo
     {
         return 
             !IsReturned &&
-            DueDate < today;
+            DueDate.HasValue &&
+            DueDate.Value < today;
     }
 
     public bool IsDueSoon(
         DateOnly today,
         int days = 3)
     {
-        if (IsReturned)
+        if (IsReturned || !DueDate.HasValue)
         {
             return false;
         }
 
         var remainingDays =
-            DueDate.DayNumber - today.DayNumber;
+            DueDate.Value.DayNumber - today.DayNumber;
         
         return remainingDays >= 0 && 
                remainingDays <= days;
