@@ -1,0 +1,6 @@
+@BookOrbit.API_HostAddress = http://localhost:5017
+
+GET {{BookOrbit.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
