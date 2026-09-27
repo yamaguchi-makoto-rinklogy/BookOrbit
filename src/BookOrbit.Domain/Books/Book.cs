@@ -72,7 +72,7 @@ public class Book
         }
         
         Status = BookStatus.Reading;
-        StartedAt ??= StartedAt;
+        StartedAt ??= startDate;
     }
 
     public void Pause()
