@@ -21,7 +21,7 @@ public class BorrowingInfo
     public BorrowingInfo(
         string borrowedFrom,
         DateOnly borrowedAt,
-        DateOnly dueDate
+        DateOnly? dueDate
     )
     {
         if (string.IsNullOrWhiteSpace(borrowedFrom))

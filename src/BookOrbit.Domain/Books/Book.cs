@@ -1,3 +1,5 @@
+using BookOrbit.Domain.Acquisitions;
+
 namespace BookOrbit.Domain.Books;
 
 public class Book
@@ -35,7 +37,7 @@ public class Book
         // EF Core用
         Title = string.Empty;
     }
-
+    
     public Book(
         string title,
         Isbn? isbn = null)
@@ -55,6 +57,11 @@ public class Book
         Priority = Priority.Medium;
         WishlistedAt = DateOnly.FromDateTime(DateTime.Today);
     }
+
+    private readonly List<Acquisition> _acquisitions = [];
+    
+    public IReadOnlyCollection<Acquisition> Acquisitions 
+        => _acquisitions;
 
     public void StartReading(DateOnly startDate)
     {
@@ -100,5 +107,73 @@ public class Book
         
         Status = BookStatus.Completed;
         FinishedAt = finishedAt;
+    }
+    
+    public void MarkAsPurchased(
+        BookFormat format,
+        DateOnly purchasedAt,
+        decimal? price,
+        string? store)
+    {
+        if (Status != BookStatus.Wishlist)
+        {
+            throw new InvalidOperationException(
+                "Wishlist本のみ購入済みに変更できます。");
+        }
+
+        var acquisition = Acquisition.CreatePurchase(
+            Id,
+            format,
+            purchasedAt,
+            price,
+            store);
+        
+        _acquisitions.Add(acquisition);
+        
+        Status = BookStatus.Unread;
+    }
+
+    public void MarkAsBorrowed(
+        AcquisitionType borrowingType,
+        BookFormat format,
+        string borrowedFrom,
+        DateOnly borrowedAt,
+        DateOnly? dueDate)
+    {
+        if (Status != BookStatus.Wishlist)
+        {
+            throw new InvalidOperationException(
+                "Wishlist本のみ借用済みに変更できます");
+        }
+
+        var acquisition = Acquisition.CreateBorrowing(
+            Id,
+            borrowingType,
+            format,
+            borrowedFrom,
+            borrowedAt,
+            dueDate);
+
+        _acquisitions.Add(acquisition);
+        
+        Status = BookStatus.Unread;
+    }
+
+    public void Return(DateOnly returnedAt)
+    {
+        var borrowing = _acquisitions
+            .LastOrDefault(x =>
+                x.Type is AcquisitionType.BorrowedLibrary
+                    or AcquisitionType.BorrowedPerson
+                && x.BorrowingInfo is not null
+                && !x.BorrowingInfo.IsReturned);
+
+        if (borrowing is null)
+        {
+            throw new InvalidOperationException(
+                "返却対象の借用情報がありません。");
+        }
+        
+        borrowing.Return(returnedAt);
     }
 }
